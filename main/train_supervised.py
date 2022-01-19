@@ -4,12 +4,10 @@ following Oracle trajectories
 """
 from typing import Dict
 import argparse
-import datetime
 import os
 import sys
 import torch
 import torch.multiprocessing as mp
-import wandb
 
 from main.data_loading import make_disk_dataloaders, make_navigation_dataloaders, make_perception_dataloaders
 
@@ -159,5 +157,4 @@ if __name__ == "__main__":
     torch.cuda.synchronize()
     exp_def = load_experiment_definition(args.def_name)
     setup = exp_def.get("Setup")
-    wandb.init(name=args.run_name, project='hlsm', config=vars(args))
     train_main(args, exp_def)

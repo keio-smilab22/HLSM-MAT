@@ -1,7 +1,6 @@
 import torch
 from torch import optim as optim
 from torch.nn import functional as F
-import wandb
 
 
 def calc_bert_lr(lr, gstep, warmup_steps, hold_steps, cooldown_steps):
@@ -82,13 +81,11 @@ def train_eval_loop(dataloader,
     # -------------------------------------------------------------------------------------
     # LOOP
 
-    sum_loss = 0
     for i, batch in enumerate(dataloader):
 
         batch = {k: v.to(device) if hasattr(v, "to") else v for k, v in batch.items()}
         loss, metrics, output = model(batch)
         loss = loss.mean()
-        sum_loss += loss.item()
 
         if not val:
             if adv_training:
@@ -229,10 +226,5 @@ def train_eval_loop(dataloader,
         if writer is not None:
             writer.add_scalar_dict(f"{prefix}/rewardvalue", metrics)
             writer.inc_iter()
-
-    if not val:
-        wandb.log({'train_loss': sum_loss/len(dataloader)})
-    else:
-        wandb.log({'valid_loss': sum_loss/len(dataloader)})
 
     return gstep, (nonbert_optimizer, bert_optimizer)
