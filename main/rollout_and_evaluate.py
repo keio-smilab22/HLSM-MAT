@@ -28,12 +28,12 @@ def collect_rollouts(args, exp_def):
     device = torch.device(exp_def.Setup.device)
     dataset_device = torch.device(exp_def.Setup.dataset_device)
     exp_name = exp_def.Setup.experiment_name
-    if args.run_name is not None:
-        exp_name = exp_name + '_' + args.run_name
     horizon = exp_def.Setup.horizon
     num_rollouts = exp_def.Setup.num_rollouts
     visualize_rollouts = exp_def.Setup.visualize_rollouts
     save_animation_dir = exp_def.Setup.get("save_rollout_animations_dir", False)
+    if args.run_name is not None:
+        exp_name = exp_name + '_' + args.run_name
 
     env = AlfredEnv(device=device,
                     setup=exp_def.Setup.env_setup.d,

@@ -69,12 +69,16 @@ def train_main(args, exp_def: Dict):
     env_type = setup.get("env")
     env_setup = setup.get("env_setup")
     device = torch.device(setup.get("device", "cpu"))
-    exp_name = setup.get("experiment_name") + '_' + args.run_name
+    exp_name = setup.get("experiment_name")
     max_rollouts = setup.get("max_rollouts")
     load_model_file = setup.get("load_model_file", None)
-    save_model_file = setup.get("save_model_file") + '_' + args.run_name
-    save_checkpoint_file = setup.get("save_checkpoint_file") + '_' + args.run_name
+    save_model_file = setup.get("save_model_file")
+    save_checkpoint_file = setup.get("save_checkpoint_file")
     load_checkpoint_file = setup.get("load_checkpoint_file")
+    if args.run_name is not None:
+        exp_name = exp_name + '_' + args.run_name
+        save_model_file = save_model_file + '_' + args.run_name
+        save_checkpoint_file = save_checkpoint_file + '_' + args.run_name
 
     num_epochs = setup.get("num_epochs")
     model_type = setup.get("model_type")
@@ -124,8 +128,8 @@ def train_main(args, exp_def: Dict):
         gstep, optimizers = train_eval_loop(train_loader,
                                             model, writer,
                                             val=False,
+                                            args=args,
                                             optimargs=hyperparams.get("optimizer_args").d,
-                                            advargs=args,
                                             gstep=gstep,
                                             device=device,
                                             optimizers=optimizers,
@@ -135,6 +139,7 @@ def train_main(args, exp_def: Dict):
                         model,
                         writer,
                         val=True,
+                        args=args,
                         optimargs=hyperparams.get("optimizer_args").d,
                         device=device)
 
@@ -145,13 +150,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--def_name', required=True)
-    parser.add_argument('--run_name', required=True)
+    parser.add_argument('--run_name', default=None)
     parser.add_argument('--adv_training', action='store_true')
-    parser.add_argument('--adv_steps', type=int, required=True)
-    parser.add_argument('--adv_modality', nargs='+', required=True)
-    parser.add_argument('--adv_optim', required=True)
+    parser.add_argument('--adv_steps', type=int)
+    parser.add_argument('--adv_modality', nargs='+')
+    parser.add_argument('--adv_optim')
 
-    args =  parser.parse_args()
+    args = parser.parse_args()
 
     mp.set_start_method("spawn")
     torch.cuda.synchronize()

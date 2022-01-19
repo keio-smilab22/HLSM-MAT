@@ -25,8 +25,8 @@ def train_eval_loop(dataloader,
                     model,
                     writer,
                     val,
+                    args=None,
                     optimargs=None,
-                    advargs=None,
                     gstep=0,
                     device="cpu",
                     optimizers=None,
@@ -70,10 +70,10 @@ def train_eval_loop(dataloader,
 
         # -------------------------------------------------------------------------------------
         # ADVERSARIAL SETUP
-        adv_training = advargs.adv_training
-        adv_steps = advargs.adv_steps
-        adv_modality = advargs.adv_modality
-        adv_optim = advargs.adv_optim
+        if args.adv_training:
+            adv_steps = args.adv_steps
+            adv_modality = args.adv_modality
+            adv_optim = args.adv_optim
 
     else:
         nonbert_optimizer, bert_optimizer = None, None
@@ -84,11 +84,14 @@ def train_eval_loop(dataloader,
     for i, batch in enumerate(dataloader):
 
         batch = {k: v.to(device) if hasattr(v, "to") else v for k, v in batch.items()}
-        loss, metrics, output = model(batch)
+        if args.def_name == 'alfred/train_subgoal_model':
+            loss, metrics, output = model(batch)
+        else:
+            loss, metrics = model(batch)
         loss = loss.mean()
 
         if not val:
-            if adv_training:
+            if args.adv_training:
                 state_delta = torch.zeros((batch['states'].data.data.shape[0], 128), device=device)
                 task_delta = torch.zeros((batch['states'].data.data.shape[0], 128), device=device)
                 action_hist_delta = torch.zeros((batch['states'].data.data.shape[0], 128), device=device)
