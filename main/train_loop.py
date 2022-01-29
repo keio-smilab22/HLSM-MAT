@@ -27,6 +27,7 @@ def train_eval_loop(dataloader,
                     val,
                     args=None,
                     optimargs=None,
+                    advargs=None,
                     gstep=0,
                     device="cpu",
                     optimizers=None,
@@ -70,10 +71,11 @@ def train_eval_loop(dataloader,
 
         # -------------------------------------------------------------------------------------
         # ADVERSARIAL SETUP
-        if args.adv_training:
-            adv_steps = args.adv_steps
-            adv_modality = args.adv_modality
-            adv_optim = args.adv_optim
+        if args.mat:
+            adv_step = advargs['step']
+            adv_modality = advargs['modality']
+            adv_optim = advargs['optim']
+            adv_loss_weight = advargs['loss_weight']
 
     else:
         nonbert_optimizer, bert_optimizer = None, None
@@ -91,14 +93,14 @@ def train_eval_loop(dataloader,
         loss = loss.mean()
 
         if not val:
-            if args.adv_training:
+            if args.mat:
                 state_delta = torch.zeros((batch['states'].data.data.shape[0], 128), device=device)
                 task_delta = torch.zeros((batch['states'].data.data.shape[0], 128), device=device)
                 action_hist_delta = torch.zeros((batch['states'].data.data.shape[0], 128), device=device)
                 state_v, task_v, action_hist_v = 0, 0, 0
                 state_s, task_s, action_hist_s = 0, 0, 0
 
-                for astep in range(adv_steps):
+                for astep in range(adv_step):
                     if 'state' in adv_modality:
                         state_delta.requires_grad_()
                     if 'task' in adv_modality:
@@ -114,10 +116,10 @@ def train_eval_loop(dataloader,
                         F.kl_div(output['act_arg_logprob'].clone().detach(), adv_output['act_arg_prob'], reduction='none')
                     mask_kl_loss = F.kl_div(adv_output['act_mask_pred_logprob_2d'], output['act_mask_pred_prob_2d'].clone().detach(), reduction='none') + \
                         F.kl_div(output['act_mask_pred_logprob_2d'].clone().detach(), adv_output['act_mask_pred_prob_2d'], reduction='none')
-                    total_loss = (adv_loss.mean() + 1.5 * type_kl_loss.mean() + 1.5 * arg_kl_loss.mean() + 1.5 * mask_kl_loss.mean()) / adv_steps
+                    total_loss = (adv_loss.mean() + adv_loss_weight * (type_kl_loss.mean() + arg_kl_loss.mean() + mask_kl_loss.mean())) / adv_step
                     total_loss.backward(retain_graph=True)
 
-                    if astep == adv_steps - 1:
+                    if astep == adv_step - 1:
                         break
 
                     if 'state' in adv_modality:

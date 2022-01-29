@@ -125,15 +125,28 @@ def train_main(args, exp_def: Dict):
 
     gstep = start_iter  # Number of iterations of training
     for i in range(start_epoch, num_epochs, 1):
-        gstep, optimizers = train_eval_loop(train_loader,
-                                            model, writer,
-                                            val=False,
-                                            args=args,
-                                            optimargs=hyperparams.get("optimizer_args").d,
-                                            gstep=gstep,
-                                            device=device,
-                                            optimizers=optimizers,
-                                            optimizer_states=optimizer_states)
+        if args.mat:
+            gstep, optimizers = train_eval_loop(train_loader,
+                                                model, writer,
+                                                val=False,
+                                                args=args,
+                                                optimargs=hyperparams.get("optimizer_args").d,
+                                                advargs=hyperparams.get("adversarial_args").d,
+                                                gstep=gstep,
+                                                device=device,
+                                                optimizers=optimizers,
+                                                optimizer_states=optimizer_states)
+
+        else:
+            gstep, optimizers = train_eval_loop(train_loader,
+                                                model, writer,
+                                                val=False,
+                                                args=args,
+                                                optimargs=hyperparams.get("optimizer_args").d,
+                                                gstep=gstep,
+                                                device=device,
+                                                optimizers=optimizers,
+                                                optimizer_states=optimizer_states)
 
         train_eval_loop(val_loader,
                         model,
@@ -151,10 +164,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--def_name', required=True)
     parser.add_argument('--run_name', default=None)
-    parser.add_argument('--adv_training', action='store_true')
-    parser.add_argument('--adv_steps', type=int)
-    parser.add_argument('--adv_modality', nargs='+')
-    parser.add_argument('--adv_optim')
+    parser.add_argument('--mat', action='store_true')
 
     args = parser.parse_args()
 
