@@ -40,10 +40,7 @@ Train the high-level controller with MAT.
 python main/train_supervised.py \
     --def_name alfred/train_subgoal_model \
     --run_name RUN_NAME \
-    --adv_training \
-    --adv_steps 3 \
-    --adv_modality state task action_hist \
-    --adv_optim adam
+    --mat
 ```
 
 Train the low-level controller.
